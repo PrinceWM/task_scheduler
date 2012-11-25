@@ -18,7 +18,8 @@ thread_pool_t *thread_pool_create(int thread_num) {
 
     pool->queue_head = NULL;
     pool->queue_tail = NULL;
-    pool->cur_task_count = 0;
+    pool->queued_task_count = 0;
+    pool->waiting_and_running_task_count = 0;
     pool->shutdown = 0;
     pool->thread_count = thread_num;
     pool->thread_id = (pthread_t *) malloc(thread_num * sizeof(pthread_t));
@@ -49,22 +50,26 @@ void thread_pool_add_task(thread_pool_t *pool, void (*task_func)(void *), void *
     }
     else
         pool->queue_head = pool->queue_tail = task;
-    pool->cur_task_count++;
-
+    pool->queued_task_count++;
     pthread_mutex_unlock(&pool->queue_mutex);
+
+    pthread_mutex_lock(&pool->count_mutex);
+    pool->waiting_and_running_task_count++;
+    pthread_mutex_unlock(&pool->count_mutex);
+
     pthread_cond_signal(&pool->queue_cond_ready);
 }
 
 /**
- * 功能：获取当前线程池中的任务数量
+ * 功能：获取当前线程池中等待和运行的任务数量
  * pool: 指向一个已经初始化的线程池
  */
-int thread_pool_get_current_task_count(thread_pool_t *pool)
+int thread_pool_get_task_count(thread_pool_t *pool)
 {
-    int count;
-    pthread_mutex_lock(&pool->queue_mutex);
-    count = pool->cur_task_count;
-    pthread_mutex_unlock(&pool->queue_mutex);
+    volatile int count;
+    pthread_mutex_lock(&pool->count_mutex);
+    count = pool->waiting_and_running_task_count;
+    pthread_mutex_unlock(&pool->count_mutex);
     return count;
 }
 
@@ -75,7 +80,7 @@ int thread_pool_get_current_task_count(thread_pool_t *pool)
  */
 void thread_pool_wait_for_done(thread_pool_t *pool)
 {
-    while(thread_pool_get_current_task_count(pool) > 0)
+    while(thread_pool_get_task_count(pool) > 0)
         usleep(100000);
 }
 
@@ -119,7 +124,7 @@ void *thread_routine(void *arg) {
     pool = (thread_pool_t *)arg;
     while(1) {
         pthread_mutex_lock(&pool->queue_mutex);
-        while(pool->cur_task_count == 0 && !pool->shutdown)
+        while(pool->queued_task_count == 0 && !pool->shutdown)
             pthread_cond_wait(&pool->queue_cond_ready, &pool->queue_mutex);
 
         if(pool->shutdown){
@@ -127,7 +132,7 @@ void *thread_routine(void *arg) {
             pthread_exit(NULL);
         }
 
-        pool->cur_task_count--;
+        pool->queued_task_count--;
         task = pool->queue_head;
         pool->queue_head = task->link;
         pthread_mutex_unlock(&pool->queue_mutex);
@@ -135,5 +140,9 @@ void *thread_routine(void *arg) {
         (*task->task_func)(task->arg);
         free(task);
         task = NULL;
+
+        pthread_mutex_lock(&pool->count_mutex);
+        pool->waiting_and_running_task_count--;
+        pthread_mutex_unlock(&pool->count_mutex);
     }
 }
