@@ -20,7 +20,7 @@ int main (int argc, char **argv)
         thread_pool_add_task(pool, two, &num[i]);
     }
 
-    sleep(2);
+    thread_pool_wait_for_done(pool);
     thread_pool_destroy(pool);
 
     return 0;

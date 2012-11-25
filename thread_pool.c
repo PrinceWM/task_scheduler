@@ -2,7 +2,7 @@
 
 void *thread_routine(void *arg);
 
-/*
+/**
  * 功能：创建线程池
  * thread_num: 线程池中线程的数量
  * 返回值：创建成功则返回指向已创建的的线程池的指针，
@@ -29,7 +29,7 @@ thread_pool_t *thread_pool_create(int thread_num) {
     return pool;
 }
 
-/*
+/**
  * 功能：添加一个任务并通知线程池中空闲的线程去执行
  * pool: 指向一个已经初始化的线程池
  * task: 函数指针，要执行的任务
@@ -55,7 +55,30 @@ void thread_pool_add_task(thread_pool_t *pool, void *(*task_func)(void *), void 
     pthread_cond_signal(&pool->queue_cond_ready);
 }
 
-/*
+/**
+ * 功能：获取当前线程池中的任务数量
+ * pool: 指向一个已经初始化的线程池
+ */
+int thread_pool_get_current_task_count(thread_pool_t *pool)
+{
+    int count;
+    pthread_mutex_lock(&pool->queue_mutex);
+    count = pool->cur_task_count;
+    pthread_mutex_unlock(&pool->queue_mutex);
+    return count;
+}
+
+/**
+ * 功能：等待线程池中的任务全部完成
+ * pool: 指向一个已经初始化的线程池
+ */
+void thread_pool_wait_for_done(thread_pool_t *pool)
+{
+    while(thread_pool_get_current_task_count(pool) > 0)
+        usleep(100000);
+}
+
+/**
  * 功能：通知并等待线程池中的线程退出，然后释放线程池占用的所有资源
  * pool: 指向要销毁的线程池（销毁后不可再引用pool所指向的内存）
  * 返回值：无
@@ -84,7 +107,7 @@ void thread_pool_destroy(thread_pool_t *pool) {
     free(pool);
 }
 
-/*
+/**
  * 功能：取出任务列表中的任务并执行
  * arg: 指向当前线程所属的线程池
  * 返回值：NULL
