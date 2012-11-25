@@ -71,6 +71,7 @@ int thread_pool_get_current_task_count(thread_pool_t *pool)
 /**
  * 功能：等待线程池中的任务全部完成
  * pool: 指向一个已经初始化的线程池
+ * 注意：此函数执行期间不应该再添加任务到线程池
  */
 void thread_pool_wait_for_done(thread_pool_t *pool)
 {
