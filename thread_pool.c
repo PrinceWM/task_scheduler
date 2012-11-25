@@ -36,7 +36,7 @@ thread_pool_t *thread_pool_create(int thread_num) {
  * arg: 传递给函数 task 的参数
  * 返回值：无
  */
-void thread_pool_add_task(thread_pool_t *pool, void *(*task_func)(void *), void *arg) {
+void thread_pool_add_task(thread_pool_t *pool, void (*task_func)(void *), void *arg) {
     thread_task_t *task = (thread_task_t *)malloc(sizeof(thread_task_t));
     task->task_func = task_func;
     task->arg = arg;
