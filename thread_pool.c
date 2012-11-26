@@ -1,6 +1,6 @@
 #include "thread_pool.h"
 
-void *thread_routine(void *arg);
+static void *thread_routine(void *arg);
 
 /**
  * 功能：创建线程池
@@ -118,7 +118,7 @@ void thread_pool_destroy(thread_pool_t *pool) {
  * arg: 指向当前线程所属的线程池
  * 返回值：NULL
  */
-void *thread_routine(void *arg) {
+static void *thread_routine(void *arg) {
     thread_pool_t *pool;
     thread_task_t *task;
     pool = (thread_pool_t *)arg;
