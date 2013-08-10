@@ -1,3 +1,6 @@
+#ifndef FF_THREAD_POOL_H
+#define FF_THREAD_POOL_H
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -30,3 +33,5 @@ thread_pool_t *thread_pool_create(int thread_num);
 void thread_pool_add_task(thread_pool_t *pool, void (*task_func)(void *), void *arg);
 void thread_pool_wait_for_done(thread_pool_t *pool);
 void thread_pool_destroy(thread_pool_t *pool);
+
+#endif
