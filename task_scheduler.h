@@ -1,5 +1,5 @@
-#ifndef FF_THREAD_POOL_H
-#define FF_THREAD_POOL_H
+#ifndef FF_TASK_SCHEDULER_H
+#define FF_TASK_SCHEDULER_H
 
 #include <stdlib.h>
 #include <unistd.h>

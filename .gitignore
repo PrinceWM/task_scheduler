@@ -4,4 +4,5 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 CMakeLists.txt.user
-thread_pool.cbp
+task_scheduler.cbp
+task_scheduler
