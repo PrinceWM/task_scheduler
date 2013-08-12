@@ -1,0 +1,6 @@
+project(thread_pool)
+cmake_minimum_required(VERSION 2.6)
+aux_source_directory(. src_list)
+add_executable(${PROJECT_NAME} ${src_list})
+target_link_libraries(${PROJECT_NAME} -pthread)
+add_definitions(-Wall -g -D_FILE_OFFSET_BITS=64)
