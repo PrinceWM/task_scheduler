@@ -1,4 +1,4 @@
-project(thread_pool)
+project(task_schedule)
 cmake_minimum_required(VERSION 2.6)
 aux_source_directory(. src_list)
 add_executable(${PROJECT_NAME} ${src_list})

@@ -1,31 +1,56 @@
-#include "thread_pool.h"
+#include "task_schedule.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 #define TASK_NUM 5
 
-void do_something(void *arg) {
-    int n = *(int *)arg;
-    printf("task #%d started\n", n);
-    sleep(rand() % 5 + 1);
-    printf("task #%d finished\n", n);
-}
-
-int main (int argc, char **argv)
+class demo_task : public ff_task
 {
-    int i;
-    int num[TASK_NUM];
-    thread_pool_t *pool;
-
-    pool = thread_pool_create(3);
-    for(i = 0; i < TASK_NUM; ++i) {
-        num[i] = i + 1;
-        thread_pool_add_task(pool, do_something, &num[i]);
+public:
+    demo_task(int n)
+    {
+        this->num = n;
     }
 
-    thread_pool_wait_for_done(pool);
-    printf("all tasks are done\n");
-    thread_pool_destroy(pool);
+    void run()
+    {
+        printf("task #%d started\n", num);
+        fflush(stdout);
+        sleep(rand() % 5 + 1);
+        printf("task #%d finished\n", num);
+        fflush(stdout);
+    }
 
+private:
+    int num;
+};
+
+int main()
+{
+    int i;
+    int done_num;
+    task_scheduler ts(3);
+    demo_task *task_list[TASK_NUM];
+
+    srand(time(0));
+    for(i = 0; i < TASK_NUM; ++i)
+        ts.submit(task_list[i] = new demo_task(i));
+
+    while(1)
+    {
+        done_num = 0;
+        for(i = 0; i < TASK_NUM; ++i)
+        {
+            if(ts.is_done(task_list[i]))
+                ++done_num;
+        }
+        if(done_num == TASK_NUM)
+        {
+            printf("all tasks are done!\n");
+            fflush(stdout);
+            break;
+        }
+        usleep(500000);
+    }
     return 0;
 }
