@@ -14,6 +14,7 @@ thread_pool_t *thread_pool_create(int thread_num) {
     pool = (thread_pool_t *)malloc(sizeof(thread_pool_t));
 
     pthread_mutex_init(&pool->queue_mutex, NULL);
+    pthread_mutex_init(&pool->count_mutex, NULL);
     pthread_cond_init(&pool->queue_cond_ready, NULL);
 
     pool->queue_head = NULL;
@@ -109,6 +110,7 @@ void thread_pool_destroy(thread_pool_t *pool) {
         free(task);
     }
     pthread_mutex_destroy(&pool->queue_mutex);
+    pthread_mutex_destroy(&pool->count_mutex);
     pthread_cond_destroy(&pool->queue_cond_ready);
     free(pool);
 }
