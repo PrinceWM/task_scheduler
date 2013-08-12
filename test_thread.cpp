@@ -12,6 +12,12 @@ public:
         this->num = n;
     }
 
+    ~demo_task()
+    {
+        printf("task #%d destroyed\n", num);
+        fflush(stdout);
+    }
+
     void run()
     {
         printf("task #%d started\n", num);
@@ -46,6 +52,11 @@ int main()
         }
         if(done_num == TASK_NUM)
         {
+            for(i = 0; i < TASK_NUM; ++i)
+            {
+                if(ts.checkout(task_list[i]))
+                    delete task_list[i];
+            }
             printf("all tasks are done!\n");
             fflush(stdout);
             break;
