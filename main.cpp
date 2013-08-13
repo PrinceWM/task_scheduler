@@ -42,21 +42,21 @@ int main()
     for(i = 0; i < TASK_NUM; ++i)
         ts.submit(task_list[i] = new demo_task(i));
 
+    done_num = 0;
     while(1)
     {
-        done_num = 0;
         for(i = 0; i < TASK_NUM; ++i)
         {
-            if(ts.is_done(task_list[i]))
-                ++done_num;
-        }
-        if(done_num == TASK_NUM)
-        {
-            for(i = 0; i < TASK_NUM; ++i)
+            if(task_list[i] && ts.is_done(task_list[i]))
             {
                 if(ts.checkout(task_list[i]))
                     delete task_list[i];
+                task_list[i] = NULL;
+                ++done_num;
             }
+        }
+        if(done_num == TASK_NUM)
+        {
             printf("all tasks are done!\n");
             fflush(stdout);
             break;
