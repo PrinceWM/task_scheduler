@@ -15,9 +15,6 @@ static void *thread_routine(void *arg)
     return NULL;
 }
 
-/**
- * thread_num: 线程池中线程的数量
- */
 task_scheduler::task_scheduler(int thread_num)
 {
     pthread_mutex_init(&this->pending_mutex, NULL);
