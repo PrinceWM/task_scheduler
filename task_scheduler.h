@@ -14,6 +14,12 @@ public:
     ff_task();
     virtual ~ff_task();
     virtual void run() = 0;
+    void cancel();
+    bool is_canceled();
+
+private:
+    pthread_mutex_t mutex;
+    bool canceled;
 };
 
 class task_scheduler
@@ -24,6 +30,7 @@ public:
     bool is_done(ff_task *task);
     void submit(ff_task *task);
     bool checkout(ff_task *task);
+    void cancel(ff_task *task);
 
 public:
     void _run();

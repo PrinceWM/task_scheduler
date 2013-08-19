@@ -2,10 +2,30 @@
 
 ff_task::ff_task()
 {
+    pthread_mutex_init(&this->mutex, NULL);
+    this->canceled = false;
+}
+
+void ff_task::cancel()
+{
+    pthread_mutex_lock(&this->mutex);
+    this->canceled = true;
+    pthread_mutex_unlock(&this->mutex);
+}
+
+bool ff_task::is_canceled()
+{
+    bool ret;
+
+    pthread_mutex_lock(&this->mutex);
+    ret = this->canceled;
+    pthread_mutex_unlock(&this->mutex);
+    return ret;
 }
 
 ff_task::~ff_task()
 {
+    pthread_mutex_destroy(&this->mutex);
 }
 
 static void *thread_routine(void *arg)
@@ -32,6 +52,8 @@ task_scheduler::task_scheduler(int thread_num)
 void task_scheduler::_run()
 {
     ff_task *task;
+    bool canceled;
+
     while(1)
     {
         pthread_mutex_lock(&this->pending_mutex);
@@ -50,9 +72,15 @@ void task_scheduler::_run()
 
         task->run();
 
+        canceled = false;
         pthread_mutex_lock(&this->done_mutex);
-        this->done_list.push_back(task);
+        if(task->is_canceled())
+            canceled = true;
+        else
+            this->done_list.push_back(task);
         pthread_mutex_unlock(&this->done_mutex);
+        if(canceled)
+            delete task;
     }
 }
 
@@ -102,6 +130,40 @@ void task_scheduler::submit(ff_task *task)
     pthread_mutex_unlock(&this->pending_mutex);
 
     pthread_cond_signal(&this->cond_ready);
+}
+
+void task_scheduler::cancel(ff_task *task)
+{
+    bool ok;
+    std::list<ff_task *>::iterator iter;
+
+    ok = false;
+    task->cancel();
+
+    pthread_mutex_lock(&this->pending_mutex);
+    iter = std::find(this->pending_list.begin(), this->pending_list.end(), task);
+    if(iter != this->pending_list.end())
+    {
+        this->pending_list.erase(iter);
+        ok = true;
+    }
+    pthread_mutex_unlock(&this->pending_mutex);
+    if(ok)
+    {
+        delete task;
+        return;
+    }
+
+    pthread_mutex_lock(&this->done_mutex);
+    iter = std::find(this->done_list.begin(), this->done_list.end(), task);
+    if(iter != this->done_list.end())
+    {
+        this->done_list.erase(iter);
+        ok = true;
+    }
+    pthread_mutex_unlock(&this->done_mutex);
+    if(ok)
+        delete task;
 }
 
 /**
